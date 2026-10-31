@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Available Books - Library Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">Library Management System</div>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('books') }}" class="active">Available Books</a>
+            <a href="{{ url_for('borrowed') }}">Borrowed Books</a>
+            {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" style="color: #fbbf24;">Admin Dashboard</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout ({{ session.get('name') }})</a>
+        </nav>
+    </header>
+
+    <main class="container" style="margin-top: 2rem;">
+        <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem;">Available Books</h1>
+        <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">Browse library books, search by topic, or sort by title, author, and year.</p>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <!-- Search Form -->
+            <form id="searchForm" method="GET" action="{{ url_for('books') }}" style="display: flex; gap: 0.5rem; flex: 1;">
+                <div class="search-box">
+                    <input type="text" id="searchInput" name="q" value="{{ query }}" placeholder="Search by title, author, category, ISBN...">
+                    <button type="button" id="micBtn" class="mic-btn" onclick="startVoiceSearch()" title="Search with voice">🎤</button>
+                </div>
+
+                <div class="filter-group">
+                    <select name="category" onchange="document.getElementById('searchForm').submit()">
+                        <option value="All" {{ 'selected' if category == 'All' else '' }}>All Categories</option>
+                        <option value="Artificial Intelligence" {{ 'selected' if category == 'Artificial Intelligence' else '' }}>Artificial Intelligence</option>
+                        <option value="Programming" {{ 'selected' if category == 'Programming' else '' }}>Programming</option>
+                        <option value="Database" {{ 'selected' if category == 'Database' else '' }}>Database</option>
+                        <option value="Networks" {{ 'selected' if category == 'Networks' else '' }}>Networks</option>
+                        <option value="Operating Systems" {{ 'selected' if category == 'Operating Systems' else '' }}>Operating Systems</option>
+                        <option value="Data Science" {{ 'selected' if category == 'Data Science' else '' }}>Data Science</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <select name="sort_by">
+                        <option value="title" {{ 'selected' if sort_by == 'title' else '' }}>Sort by Title</option>
+                        <option value="author" {{ 'selected' if sort_by == 'author' else '' }}>Sort by Author</option>
+                        <option value="year" {{ 'selected' if sort_by == 'year' else '' }}>Sort by Year</option>
+                        <option value="category" {{ 'selected' if sort_by == 'category' else '' }}>Sort by Category</option>
+                    </select>
+                    <button type="submit" class="btn-action btn-quicksort">⚡ Sort Books</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Voice Search Feedback status -->
+        <div id="voiceStatus" style="display: none; padding: 0.5rem 1rem; margin-bottom: 1rem; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 0.85rem; color: #1d4ed8;">
+            Listening...
+        </div>
+
+        <!-- Sort Status Label -->
+        {% if is_quick_sorted %}
+        <div style="margin-bottom: 1.5rem;">
+            <span class="sort-label">⚡ Books sorted successfully</span>
+        </div>
+        {% endif %}
+
+        <!-- Book Cards Grid -->
+        <div class="book-grid">
+            {% for book in books %}
+            <div class="book-card">
+                <div>
+                    <span class="category-tag">{{ book.category }}</span>
+                    <h3>{{ book.title }}</h3>
+                    <p class="author">Author: <strong>{{ book.author }}</strong></p>
+                    <div class="meta">
+                        <span>ISBN: {{ book.isbn }}</span>
+                        <span>Year: {{ book.year }}</span>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: {{ '#059669' if book.available_quantity > 0 else '#dc2626' }};">
+                        {{ 'Available (' ~ book.available_quantity ~ ')' if book.available_quantity > 0 else 'Unavailable' }}
+                    </span>
+
+                    {% if session.get('role') == 'student' %}
+                    <form action="{{ url_for('borrow', book_id=book.id) }}" method="POST" style="margin: 0;">
+                        <button type="submit" class="btn-borrow" {{ 'disabled' if book.available_quantity <= 0 else '' }}>
+                            Borrow Book
+                        </button>
+                    </form>
+                    {% elif session.get('role') == 'admin' %}
+                    <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Delete this book?');">
+                        <button type="submit" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                            Delete
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div style="grid-column: 1 / -1; padding: 3rem; text-align: center; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <p style="color: #64748b;">No books found matching your query.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Library Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">Library Management System (Admin)</div>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('books') }}">Available Books</a>
+            <a href="{{ url_for('borrowed') }}">Borrowed Books</a>
+            <a href="{{ url_for('admin_dashboard') }}" class="active" style="color: #fbbf24;">Admin Dashboard</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout ({{ session.get('name') }})</a>
+        </nav>
+    </header>
+
+    <main class="container" style="margin-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 800;">Admin Dashboard</h1>
+                <p style="color: #64748b; font-size: 0.875rem;">Manage catalog, students, and circulation records.</p>
+            </div>
+            <a href="{{ url_for('add_book') }}" class="btn-action" style="background: #2563eb; color: white; text-decoration: none; font-weight: 700; border: none; padding: 0.6rem 1.2rem; border-radius: 8px;">
+                + Add New Book
+            </a>
+        </div>
+
+        <!-- 6 Admin Statistic Cards -->
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <div class="card">
+                <h3>Total Books</h3>
+                <p class="stat-number">{{ stats.total_books }}</p>
+            </div>
+            <div class="card">
+                <h3>Available Books</h3>
+                <p class="stat-number text-emerald">{{ stats.available_books }}</p>
+            </div>
+            <div class="card">
+                <h3>Borrowed Books</h3>
+                <p class="stat-number text-amber">{{ stats.borrowed_books }}</p>
+            </div>
+            <div class="card">
+                <h3>Total Students</h3>
+                <p class="stat-number">{{ stats.total_students }}</p>
+            </div>
+            <div class="card">
+                <h3>Total Checkouts</h3>
+                <p class="stat-number">{{ stats.total_checkouts }}</p>
+            </div>
+            <div class="card">
+                <h3>Total Returns</h3>
+                <p class="stat-number text-emerald">{{ stats.total_returns }}</p>
+            </div>
+        </div>
+
+        <!-- Manage Books Table -->
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 2rem 0 1rem 0;">Catalog Books ({{ books|length }})</h2>
+        <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 2rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title &amp; Author</th>
+                        <th>Category</th>
+                        <th>ISBN</th>
+                        <th>Year</th>
+                        <th>Available / Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in books %}
+                    <tr>
+                        <td style="color: #64748b; font-family: monospace;">#{{ b['id'] }}</td>
+                        <td>
+                            <strong>{{ b['title'] }}</strong><br>
+                            <span style="font-size: 0.75rem; color: #64748b;">By {{ b['author'] }}</span>
+                        </td>
+                        <td><span style="color: #2563eb; font-weight: 500;">{{ b['category'] }}</span></td>
+                        <td style="font-family: monospace; font-size: 0.8rem;">{{ b['isbn'] }}</td>
+                        <td>{{ b['year'] }}</td>
+                        <td>
+                            <strong style="color: {{ '#059669' if b['available_quantity'] > 0 else '#dc2626' }};">{{ b['available_quantity'] }}</strong> / {{ b['quantity'] }}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('delete_book', book_id=b['id']) }}" method="POST" onsubmit="return confirm('Delete this book?');">
+                                <button type="submit" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Registered Students -->
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 2rem 0 1rem 0;">Registered Students ({{ students|length }})</h2>
+        <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% for s in students %}
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; flex: 1; min-width: 200px;">
+                <h4 style="font-size: 0.95rem; font-weight: 700;">{{ s['name'] }}</h4>
+                <p style="font-size: 0.8rem; color: #64748b; font-family: monospace;">{{ s['email'] }}</p>
+                <span style="font-size: 0.75rem; color: #2563eb; font-weight: 600; text-transform: uppercase;">Role: {{ s['role'] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Borrowed Books - Library Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">Library Management System</div>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('books') }}">Available Books</a>
+            <a href="{{ url_for('borrowed') }}" class="active">Borrowed Books</a>
+            {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" style="color: #fbbf24;">Admin Dashboard</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout ({{ session.get('name') }})</a>
+        </nav>
+    </header>
+
+    <main class="container" style="margin-top: 2rem;">
+        <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem;">
+            {{ 'All Borrowed Records (Admin View)' if session.get('role') == 'admin' else 'My Borrowed Books' }}
+        </h1>
+        <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
+            Track active book loans and return borrowed titles to the library.
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div style="padding: 0.75rem 1rem; margin-bottom: 1.5rem; border-radius: 8px; font-size: 0.875rem; background: {{ '#fee2e2' if category == 'error' else '#d1fae5' }}; color: {{ '#991b1b' if category == 'error' else '#065f46' }};">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
+            <table>
+                <thead>
+                    <tr>
+                        {% if session.get('role') == 'admin' %}
+                        <th>Student</th>
+                        {% endif %}
+                        <th>Book Title</th>
+                        <th>Author</th>
+                        <th>Checkout Date</th>
+                        <th>Return Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in checkouts %}
+                    <tr>
+                        {% if session.get('role') == 'admin' %}
+                        <td>
+                            <strong>{{ item['student_name'] }}</strong><br>
+                            <span style="font-size: 0.75rem; color: #64748b;">{{ item['student_email'] }}</span>
+                        </td>
+                        {% endif %}
+                        <td><strong>{{ item['book_title'] }}</strong></td>
+                        <td>{{ item['book_author'] }}</td>
+                        <td>{{ item['checkout_date'] }}</td>
+                        <td>{{ item['return_date'] or 'Pending' }}</td>
+                        <td>
+                            <span style="font-weight: 600; color: {{ '#d97706' if item['status'] == 'Borrowed' else '#059669' }};">
+                                {{ item['status'] }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if item['status'] == 'Borrowed' %}
+                            <form action="{{ url_for('return_book', checkout_id=item['id']) }}" method="POST" style="margin: 0;">
+                                <button type="submit" style="background: #059669; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">
+                                    Return Book
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: #94a3b8; font-size: 0.75rem;">Returned</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #64748b; padding: 2rem;">
+                            No borrowed book records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

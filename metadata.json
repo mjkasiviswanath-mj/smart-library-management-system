@@ -1,0 +1,6 @@
+{
+  "name": "Smart Library Management System",
+  "description": "Smart Library Management System - Digital Catalog and Circulation Portal.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

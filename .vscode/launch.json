@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Python Flask Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/library-management/app.py",
+      "cwd": "${workspaceFolder}/library-management",
+      "console": "integratedTerminal"
+    }
+  ]
+}

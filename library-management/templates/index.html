@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">Library Management System</div>
+        <nav>
+            <a href="{{ url_for('home') }}" class="active">Home</a>
+            <a href="{{ url_for('books') }}">Available Books</a>
+            <a href="{{ url_for('borrowed') }}">Borrowed Books</a>
+            {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" style="color: #fbbf24;">Admin Dashboard</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout ({{ session.get('name') }})</a>
+        </nav>
+    </header>
+
+    <!-- Blue Hero Section -->
+    <div class="hero">
+        <h1>Library Management System</h1>
+        <p>Search available books, browse catalog collections, and explore book recommendations.</p>
+        <a href="{{ url_for('books') }}" class="btn-primary">View Available Books</a>
+    </div>
+
+    <main class="container">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div style="padding: 0.75rem 1rem; margin-bottom: 1.5rem; border-radius: 8px; font-size: 0.875rem; background: {{ '#fee2e2' if category == 'error' else '#d1fae5' }}; color: {{ '#991b1b' if category == 'error' else '#065f46' }};">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Three Primary Statistics Cards -->
+        <div class="stats-grid">
+            <div class="card">
+                <h3>Total Books</h3>
+                <p class="stat-number">{{ stats.total_books }}</p>
+            </div>
+            <div class="card">
+                <h3>Available Books</h3>
+                <p class="stat-number text-emerald">{{ stats.available_books }}</p>
+            </div>
+            <div class="card">
+                <h3>Borrowed Books</h3>
+                <p class="stat-number text-amber">{{ stats.borrowed_books }}</p>
+            </div>
+        </div>
+
+        <!-- Book Recommendation Section -->
+        <div class="recommendation-section">
+            <h2>Book Recommendation</h2>
+            <p style="color: #64748b; font-size: 0.9rem;">Choose a category to see some recommended books.</p>
+            <p class="rec-note">Recommendation is generated based on user borrowing history and book category.</p>
+
+            <div style="margin: 1.5rem 0; display: flex; align-items: center; gap: 0.75rem;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: #475569;">Category:</label>
+                <select id="categorySelect" onchange="fetchRecommendations()">
+                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                    <option value="Programming">Programming</option>
+                    <option value="Database">Database</option>
+                    <option value="Networks">Networks</option>
+                    <option value="Operating Systems">Operating Systems</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Machine Learning">Machine Learning</option>
+                </select>
+            </div>
+
+            <!-- Recommended Books Grid (dynamically loaded or pre-rendered) -->
+            <div id="recGrid" class="book-grid">
+                {% for item in recommendations %}
+                <div class="book-card">
+                    <div>
+                        <span class="category-tag">{{ item.book.category }}</span>
+                        <h3>{{ item.book.title }}</h3>
+                        <p class="author">By {{ item.book.author }}</p>
+                        <p style="font-size: 0.75rem; color: #059669; margin: 0.3rem 0;">✨ {{ item.reason }}</p>
+                        <div class="meta">
+                            <span>Year: {{ item.book.year }}</span>
+                            <span>Available: {{ item.book.available_quantity }}</span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <span style="font-size: 0.8rem; font-weight: 600; color: {{ '#059669' if item.book.available_quantity > 0 else '#dc2626' }};">
+                            {{ 'In Stock' if item.book.available_quantity > 0 else 'Out of Stock' }}
+                        </span>
+                        {% if session.get('role') == 'student' %}
+                        <form action="{{ url_for('borrow', book_id=item.book.id) }}" method="POST" style="margin: 0;">
+                            <button type="submit" class="btn-borrow" {{ 'disabled' if item.book.available_quantity <= 0 else '' }}>
+                                Borrow Book
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

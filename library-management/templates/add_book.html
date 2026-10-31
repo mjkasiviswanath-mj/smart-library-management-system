@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Book - Library Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">Library Management System (Admin)</div>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('books') }}">Available Books</a>
+            <a href="{{ url_for('borrowed') }}">Borrowed Books</a>
+            <a href="{{ url_for('admin_dashboard') }}" class="active">Admin Dashboard</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </nav>
+    </header>
+
+    <main class="container" style="max-width: 600px; margin-top: 3rem;">
+        <div class="card">
+            <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">Add New Book</h2>
+            
+            <!-- Free Open Library API Auto-Fill Banner -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="color: #166534; font-size: 0.85rem;">🌐 Free Open Library API (Zero Cost · Runs on PC)</strong>
+                    <span style="font-size: 0.75rem; background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 600;">No API Key Needed</span>
+                </div>
+                <p style="font-size: 0.75rem; color: #15803d; margin-bottom: 0.75rem; margin-top: 0;">
+                    Enter an ISBN below (e.g. <code>9780132350884</code> or <code>9780262033848</code>) to automatically fill title, author, year & topic.
+                </p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="apiIsbnInput" placeholder="Enter ISBN (e.g. 9780132350884)" style="flex: 1; padding: 0.4rem 0.6rem; border: 1px solid #86efac; border-radius: 6px; font-size: 0.85rem;">
+                    <button type="button" onclick="fetchBookApi()" style="background: #16a34a; color: white; border: none; border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+                        Fetch Details
+                    </button>
+                </div>
+                <div id="apiStatus" style="display: none; margin-top: 0.5rem; font-size: 0.8rem; padding: 0.4rem; border-radius: 4px;"></div>
+            </div>
+
+            <form method="POST" action="{{ url_for('add_book') }}">
+                <div class="form-group">
+                    <label>Book Title *</label>
+                    <input type="text" id="fieldTitle" name="title" required placeholder="e.g. Design Patterns">
+                </div>
+
+                <div class="form-group">
+                    <label>Author *</label>
+                    <input type="text" id="fieldAuthor" name="author" required placeholder="e.g. Erich Gamma">
+                </div>
+
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="fieldCategory" name="category" style="width: 100%;">
+                        <option value="Artificial Intelligence">Artificial Intelligence</option>
+                        <option value="Programming">Programming</option>
+                        <option value="Database">Database</option>
+                        <option value="Networks">Networks</option>
+                        <option value="Operating Systems">Operating Systems</option>
+                        <option value="Data Science">Data Science</option>
+                        <option value="Machine Learning">Machine Learning</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>ISBN *</label>
+                    <input type="text" id="fieldIsbn" name="isbn" required placeholder="978-...">
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Publication Year *</label>
+                        <input type="number" id="fieldYear" name="year" required value="2023" min="1950" max="2030">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Total Copies *</label>
+                        <input type="number" name="quantity" required value="5" min="1" max="100">
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn-action" style="text-decoration: none; text-align: center;">Cancel</a>
+                    <button type="submit" class="btn-primary" style="border: none; cursor: pointer; background: #2563eb; color: white;">
+                        Add Book
+                    </button>
+                </div>
+            </form>
+
+            <script>
+            async function fetchBookApi() {
+                const isbn = document.getElementById('apiIsbnInput').value.trim();
+                const statusDiv = document.getElementById('apiStatus');
+                if (!isbn) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = '#fee2e2';
+                    statusDiv.style.color = '#991b1b';
+                    statusDiv.textContent = 'Please enter an ISBN first.';
+                    return;
+                }
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#e0f2fe';
+                statusDiv.style.color = '#075985';
+                statusDiv.textContent = 'Fetching book details from free Open Library API...';
+
+                try {
+                    const res = await fetch(`/api/lookup-book?isbn=${encodeURIComponent(isbn)}`);
+                    const data = await res.json();
+                    if (data.success) {
+                        document.getElementById('fieldTitle').value = data.title;
+                        document.getElementById('fieldAuthor').value = data.author;
+                        document.getElementById('fieldYear').value = data.year;
+                        document.getElementById('fieldIsbn').value = data.isbn;
+                        if (data.category) {
+                            document.getElementById('fieldCategory').value = data.category;
+                        }
+                        statusDiv.style.background = '#dcfce7';
+                        statusDiv.style.color = '#166534';
+                        statusDiv.textContent = `✓ Fetched "${data.title}" successfully via Free Open Library API (Zero cost)!`;
+                    } else {
+                        statusDiv.style.background = '#fee2e2';
+                        statusDiv.style.color = '#991b1b';
+                        statusDiv.textContent = data.error || 'Book not found in Open Library.';
+                    }
+                } catch (err) {
+                    statusDiv.style.background = '#fee2e2';
+                    statusDiv.style.color = '#991b1b';
+                    statusDiv.textContent = 'API network request error.';
+                }
+            }
+            </script>
+        </div>
+    </main>
+</body>
+</html>
